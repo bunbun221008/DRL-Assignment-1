@@ -3,3 +3,4 @@ requests
 argparse
 torch
 
+numpy==1.21.0
