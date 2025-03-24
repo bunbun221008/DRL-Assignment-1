@@ -41,7 +41,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
     epsilon = epsilon_start
 
 
-    def get_q_state(obs, last_action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations ):
+    def get_q_state(obs ):
 
         # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
         #create a list of 4 stations position where positions are unknown
@@ -49,39 +49,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
         taxi_row, taxi_col, stations_pos[0][0], stations_pos[0][1], stations_pos[1][0], stations_pos[1][1], stations_pos[2][0], stations_pos[2][1], stations_pos[3][0], stations_pos[3][1], obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
 
 
-        # Sort stations_pos based on the first column, then the second column
-        sorted_indices = np.lexsort((stations_pos[:, 1], stations_pos[:, 0]))
-        stations_pos = stations_pos[sorted_indices]
-
-        rel_sta_pos = [[0,0], [0,0], [0,0], [0,0]]
-        for i in range(4):
-            rel_sta_pos[i] = [stations_pos[i][0] - taxi_row  , stations_pos[i][1] - taxi_col]
-            if rel_sta_pos[i][0] >0:
-                rel_sta_pos[i][0] = 1 
-            elif rel_sta_pos[i][0] <0:  
-                rel_sta_pos[i][0] = -1  
-
-            if rel_sta_pos[i][1] >0:
-                rel_sta_pos[i][1] = 1
-            elif rel_sta_pos[i][1] <0:
-                rel_sta_pos[i][1] = -1      
-        if Passenger_Pos[0] == -1:
-            rel_passenger_pos = [2,2]
-        else:
-            rel_passenger_pos = [Passenger_Pos[0] - taxi_row, Passenger_Pos[1] - taxi_col]
-            if rel_passenger_pos[0] >0:
-                rel_passenger_pos[0] = 1
-            elif rel_passenger_pos[0] <0:
-                rel_passenger_pos[0] = -1
-            if rel_passenger_pos[1] >0:
-                rel_passenger_pos[1] = 1
-            elif rel_passenger_pos[1] <0:
-                rel_passenger_pos[1] = -1
-        
-
-        
-
-        return (tuple(rel_sta_pos[0]),tuple(rel_sta_pos[1]),tuple(rel_sta_pos[2]),tuple(rel_sta_pos[3]), obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look, last_action, tuple(rel_passenger_pos), Has_Passenger, Checked_Stations, Checked_Destinations)
+        return ( obstacle_north, obstacle_south, obstacle_east, obstacle_west)
 
 
     for episode in range(episodes):
@@ -96,7 +64,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
         Has_Picked_Up = False
         Checked_Stations = -1
         Checked_Destinations = -1
-        state = get_q_state(obs, last_action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations)
+        state = get_q_state(obs)
 
 
         while not (done or stop):
@@ -118,65 +86,9 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
             # Execute the selected action.
             obs, reward, done,  _ = env.step(action)
 
-            stations_pos = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-            taxi_row, taxi_col, stations_pos[0][0], stations_pos[0][1], stations_pos[1][0], stations_pos[1][1], stations_pos[2][0], stations_pos[2][1], stations_pos[3][0], stations_pos[3][1], obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
-
-
-            # Sort stations_pos based on the first column, then the second column
-            sorted_indices = np.lexsort((stations_pos[:, 1], stations_pos[:, 0]))
-            stations_pos = stations_pos[sorted_indices]
         
-            if not Has_Picked_Up:
-                if action == 4 and passenger_look and ((taxi_col == stations_pos[0][0] and taxi_row == stations_pos[0][1]) or (taxi_col == stations_pos[1][0] and taxi_row == stations_pos[1][1]) or (taxi_col == stations_pos[2][0] and taxi_row == stations_pos[2][1]) or (taxi_col == stations_pos[3][0] and taxi_row == stations_pos[3][1])):
-                    Has_Picked_Up = True
-                    Has_Passenger = True
-                    Passenger_Pos[0] = taxi_row
-                    Passenger_Pos[1] = taxi_col
-            else:
-                if (not Has_Passenger) and action == 4 and Passenger_Pos[0] == taxi_row and Passenger_Pos[1] == taxi_col:
-                    Has_Passenger = True
-        
-            if Has_Passenger:
-                Passenger_Pos[0] = taxi_row
-                Passenger_Pos[1] = taxi_col
-                if action == 5:
-                    Has_Passenger = False
-                    Passenger_Pos[0] = taxi_row
-                    Passenger_Pos[1] = taxi_col
-            
-            Near_Stations = [0,0,0,0]
-            
-            if np.abs(taxi_row - stations_pos[0][0]) + np.abs(taxi_col - stations_pos[0][1]) <= 0:
-                Near_Stations[0] = 1
-            if np.abs(taxi_row - stations_pos[1][0]) + np.abs(taxi_col - stations_pos[1][1]) <= 0:
-                Near_Stations[1] = 1
-            if np.abs(taxi_row - stations_pos[2][0]) + np.abs(taxi_col - stations_pos[2][1]) <= 0:
-                Near_Stations[2] = 1
-            if np.abs(taxi_row - stations_pos[3][0]) + np.abs(taxi_col - stations_pos[3][1]) <= 0:
-                Near_Stations[3] = 1
-            
-            if Checked_Stations == -1:
-                if Near_Stations[0] == 1:
-                    Checked_Stations = 0
-                    if destination_look:
-                        Checked_Destinations = 0
-            elif Checked_Stations == 0:
-                if Near_Stations[1] == 1:
-                    Checked_Stations = 1
-                    if destination_look:
-                        Checked_Destinations = 1
-            elif Checked_Stations == 1:
-                if Near_Stations[2] == 1:
-                    Checked_Stations = 2
-                    if destination_look:
-                        Checked_Destinations = 2
-            elif Checked_Stations == 2:
-                if Near_Stations[3] == 1:
-                    Checked_Stations = 3
-                    if destination_look:
-                        Checked_Destinations = 3
 
-            next_state = get_q_state(obs, action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations)
+            next_state = get_q_state(obs)
             episode_step += 1
 
             
@@ -186,24 +98,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
             shaped_reward = 0
             if episode_step >= MAX_STEPS:
                 stop = True
-                shaped_reward += TOO_LONG
-
-            if state[12] == 0 and next_state[12] == 1:
-                shaped_reward += Pick_Up_Passenger
-
-            if next_state[8] == 1 and state[8] == 0:
-                shaped_reward += Near_Passenger
-            if next_state[8] == 0 and state[8] == 1:
-                shaped_reward -= Near_Passenger
-
-            if Checked_Stations > state[13] :
-                shaped_reward += Check_station
-            
-            
-
-            if (next_state[10],state[10]) == (0,1) or (next_state[10],state[10]) == (1,0) or (next_state[10],state[10]) == (2,3) or (next_state[10],state[10]) == (3,2):
-                shaped_reward += Turn_Back
-
+                
 
             # Update total reward.
             reward += shaped_reward

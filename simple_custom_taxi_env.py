@@ -15,7 +15,7 @@ import random
 
 
 class SimpleTaxiEnv():
-    def __init__(self, grid_size=10, fuel_limit=5000):
+    def __init__(self, grid_size=5, fuel_limit=5000):
         """
         Custom Taxi environment supporting different grid sizes.
         """
@@ -24,7 +24,7 @@ class SimpleTaxiEnv():
         self.current_fuel = fuel_limit
         self.passenger_picked_up = False
 
-        self.OBSTACLE_NUMBER = 2
+        self.OBSTACLE_NUMBER = 3
         
         # position of four stations in the grid, generate by random
 
@@ -240,8 +240,8 @@ def run_agent(agent_file, env_config, render=False):
 
 if __name__ == "__main__":
     env_config = {
-        "fuel_limit": 50
+        "fuel_limit": 5000
     }
     
-    agent_score = run_agent("student_agent.py", env_config, render=True)
+    agent_score = run_agent("student_agent.py", env_config, render=0)
     print(f"Final Score: {agent_score}")
