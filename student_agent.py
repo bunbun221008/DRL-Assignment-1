@@ -4,7 +4,7 @@ import pickle
 import random
 import gym
 import json
-
+from joblib import dump, load
 
 def get_q_state(obs, last_action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations ):
 
@@ -71,8 +71,7 @@ def get_action(obs):
     #       Otherwise, even if your agent performs well in training, it may fail during testing.
 
     # Load the pre-trained Q-table
-    with open("q_table.pkl", "rb") as f:
-        Q_table = pickle.load(f)
+    Q_table = load("q_table.joblib")
 
 
     sta_row = [0, 0, 0, 0]
