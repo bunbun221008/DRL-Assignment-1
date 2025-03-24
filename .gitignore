@@ -5,5 +5,7 @@ __pycache__/
 .venv/
 .env
 myenv/
+student_agent2.py
+train_q_learning2.py
 # ignore eval.py
 eval.py
