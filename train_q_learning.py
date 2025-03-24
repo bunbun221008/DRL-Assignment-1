@@ -127,5 +127,5 @@ if __name__ == "__main__":
 
     # Save the Q-table for testing
     with open("q_table.pkl", "wb") as f:
-        pickle.dump(q_table, f)
+        pickle.dump(q_table, f, protocol=4)
 

@@ -16,6 +16,7 @@ def get_action(obs):
     # Load the pre-trained Q-table
     with open("q_table.pkl", "rb") as f:
         Q_table = pickle.load(f)
+    
     def get_q_state(obs):
 
         # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
