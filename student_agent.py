@@ -55,6 +55,7 @@ Has_Picked_Up = False
 last_action = -1
 Checked_Stations = -1
 Checked_Destinations = -1
+count = 0
 
 def get_action(obs):
     global last_action
@@ -63,7 +64,12 @@ def get_action(obs):
     global Has_Picked_Up
     global Checked_Stations
     global Checked_Destinations
-    
+    global count
+    if count < 5000:
+        count += 1
+    else:
+        count = 0
+    print(count)
     # TODO: Train your own agent
     # HINT: If you're using a Q-table, consider designing a custom key based on `obs` to store useful information.
     # NOTE: Keep in mind that your Q-table may not cover all possible states in the testing environment.
@@ -149,11 +155,6 @@ def get_action(obs):
         action = np.argmax(Q_table[state])  # Exploit.
 
     last_action = action
-
-    
-
-    
-
     
 
 
