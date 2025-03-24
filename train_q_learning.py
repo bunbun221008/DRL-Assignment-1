@@ -5,9 +5,13 @@ import time
 from IPython.display import clear_output
 import random
 from simple_custom_taxi_env import SimpleTaxiEnv
+import json
 
-def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
-                              epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.9998, reward_shaping=True,
+
+
+
+def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
+                              epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.9999, reward_shaping=True,
                               q_table=None, debug=False):
     # The default parameters should allow learning, but you can still adjust them to achieve better training performance.
     """
@@ -17,11 +21,11 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
     - Ensure the agent learns the full sequence: "pick up key → open door → reach goal".
     """
     action_n = 6
-    DROP_KEY = -0.5
-    TAKE_KEY = 0.5
-    CLOSE_DOOR = -0.5
-    OPEN_DOOR = 0.5
-    TOO_LONG = -0.5
+    Near_Passenger = + 5
+    Near_Destination = + 5
+    Pick_Up_Passenger = 10
+    Repeat_Pick_Up_Passenger = - 10
+    Check_station = +5
 
     env = SimpleTaxiEnv()
     env.reset()
@@ -33,41 +37,70 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
     epsilon = epsilon_start
 
 
-    def get_q_state(obs):
+    def get_q_state(obs, last_action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations ):
 
         # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
         #create a list of 4 stations position where positions are unknown
         sta_row = [0, 0, 0, 0]
         sta_column = [0, 0, 0, 0]
+        Near_sta = [0,0,0,0]
         taxi_row, taxi_col, sta_row[0],sta_column[0],sta_row[1],sta_column[1],sta_row[2],sta_column[2],sta_row[3],sta_column[3],obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
 
         rel_sta_pos = [[0,0], [0,0], [0,0], [0,0]]
         for i in range(4):
             rel_sta_pos[i] = [sta_row[i] - taxi_row  , sta_column[i] - taxi_col]
+            if np.abs(rel_sta_pos[i][0]) + np.abs(rel_sta_pos[i][1]) <= 1:
+                Near_sta[i] = 1
+            
             if rel_sta_pos[i][0] >0:
                 rel_sta_pos[i][0] = 1 
             elif rel_sta_pos[i][0] <0:  
-                rel_sta_pos[i][0] = -1        
+                rel_sta_pos[i][0] = -1  
+
+            if rel_sta_pos[i][1] >0:
+                rel_sta_pos[i][1] = 1
+            elif rel_sta_pos[i][1] <0:
+                rel_sta_pos[i][1] = -1      
+        if Passenger_Pos[0] == -1:
+            rel_passenger_pos = [2,2]
+        else:
+            rel_passenger_pos = [Passenger_Pos[0] - taxi_row, Passenger_Pos[1] - taxi_col]
+            if rel_passenger_pos[0] >0:
+                rel_passenger_pos[0] = 1
+            elif rel_passenger_pos[0] <0:
+                rel_passenger_pos[0] = -1
+            if rel_passenger_pos[1] >0:
+                rel_passenger_pos[1] = 1
+            elif rel_passenger_pos[1] <0:
+                rel_passenger_pos[1] = -1
+        
 
         
 
-        return (obs[10], obs[11], obs[12], obs[13], obs[14], obs[15])
+        return (tuple(rel_sta_pos[0]),tuple(rel_sta_pos[1]),tuple(rel_sta_pos[2]),tuple(rel_sta_pos[3]), obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look, last_action, tuple(rel_passenger_pos), Has_Passenger, tuple(Near_sta), tuple(Checked_Stations), Checked_Destinations)
 
 
     for episode in range(episodes):
         obs, _ = env.reset()
-        state = get_q_state(obs)  
         done = False
+        last_action = -1
         total_reward = 0
         episode_step = 0
         stop = 0
+        Passenger_Pos = [-1,-1]
+        Has_Passenger = False
+        Has_Picked_Up = False
+        Checked_Stations = [0,0,0,0]
+        Checked_Destinations = -1
+        state = get_q_state(obs, last_action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations)
+
 
         while not (done or stop):
             # TODO: Initialize the state in the Q-table if not already present.
             if state not in q_table:
                 q_table[state] = np.zeros(action_n)
 
-
+            
             # TODO: Implement ε-greedy policy for action selection.
             if np.random.rand() < epsilon:
                 action = np.random.choice(action_n)  # Explore.
@@ -75,23 +108,95 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
                 action = np.argmax(q_table[state])  # Exploit.
 
 
+            
+
+
             # Execute the selected action.
             obs, reward, done,  _ = env.step(action)
-            next_state = get_q_state(obs)
+
+            sta_row = [0, 0, 0, 0]
+            sta_column = [0, 0, 0, 0]
+            taxi_row, taxi_col, sta_row[0],sta_column[0],sta_row[1],sta_column[1],sta_row[2],sta_column[2],sta_row[3],sta_column[3],obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
+        
+        
+            if not Has_Picked_Up:
+                if action == 4 and passenger_look and ((taxi_col == sta_column[0] and taxi_row == sta_row[0]) or (taxi_col == sta_column[1] and taxi_row == sta_row[1]) or (taxi_col == sta_column[2] and taxi_row == sta_row[2]) or (taxi_col == sta_column[3] and taxi_row == sta_row[3])):
+                    Has_Picked_Up = True
+                    Has_Passenger = True
+                    Passenger_Pos[0] = taxi_row
+                    Passenger_Pos[1] = taxi_col
+            else:
+                if (not Has_Passenger) and action == 4 and Passenger_Pos[0] == taxi_row and Passenger_Pos[1] == taxi_col:
+                    Has_Passenger = True
+        
+            if Has_Passenger:
+                Passenger_Pos[0] = taxi_row
+                Passenger_Pos[1] = taxi_col
+                if action == 5:
+                    Has_Passenger = False
+                    Passenger_Pos[0] = taxi_row
+                    Passenger_Pos[1] = taxi_col
+            
+            Near_Stations = [0,0,0,0]
+            
+            if np.abs(taxi_row - sta_row[0]) + np.abs(taxi_col - sta_column[0]) <= 1:
+                Near_Stations[0] = 1
+            if np.abs(taxi_row - sta_row[1]) + np.abs(taxi_col - sta_column[1]) <= 1:
+                Near_Stations[1] = 1 
+            if np.abs(taxi_row - sta_row[2]) + np.abs(taxi_col - sta_column[2]) <= 1:
+                Near_Stations[2] = 1
+            if np.abs(taxi_row - sta_row[3]) + np.abs(taxi_col - sta_column[3]) <= 1:
+                Near_Stations[3] = 1
+            
+            if Near_Stations[0] == 1:
+                Checked_Stations[0] = 1
+                if destination_look:
+                    Checked_Destinations = 0
+            if Near_Stations[1] == 1:
+                Checked_Stations[1] = 1
+                if destination_look:
+                    Checked_Destinations = 1
+            if Near_Stations[2] == 1:
+                Checked_Stations[2] = 1
+                if destination_look:
+                    Checked_Destinations = 2
+            if Near_Stations[3] == 1:
+                Checked_Stations[3] = 1
+                if destination_look:
+                    Checked_Destinations = 3
+
+            next_state = get_q_state(obs, action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations)
             episode_step += 1
 
-            if episode_step >= 200:
+            if episode_step >= 50:
                 stop = True
 
             # ✅ TODO: Implement reward shaping.
 
-            shaped_reward = 0.2
+            shaped_reward = 0
 
+            if state[12] == 0 and next_state[12] == 1:
+                shaped_reward += Pick_Up_Passenger
+
+            if next_state[8] == 1 and state[8] == 0:
+                shaped_reward += Near_Passenger
+            if next_state[8] == 0 and state[8] == 1:
+                shaped_reward -= Near_Passenger
+
+            if Checked_Stations[0] == 1 and state[14][0] == 0 :
+                shaped_reward += Check_station
+            if Checked_Stations[1] == 1 and state[14][1] == 0 :
+                shaped_reward += Check_station
+            if Checked_Stations[2] == 1 and state[14][2] == 0 :
+                shaped_reward += Check_station
+            if Checked_Stations[3] == 1 and state[14][3] == 0 :
+                shaped_reward += Check_station
             
 
 
             # Update total reward.
             reward += shaped_reward
+
             total_reward += reward
 
             # TODO: Initialize the next state in the Q-table if not already present.
@@ -102,6 +207,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
             q_table[state][action] += alpha * (reward + gamma * np.max(q_table[next_state]) - q_table[state][action])
 
             # Move to the next state.
+            last_action = action
             state = next_state
 
 
@@ -117,8 +223,8 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
 
 
 if __name__ == "__main__":
-    q_table, rewards = tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
-                                                 epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.9998, reward_shaping=True,
+    q_table, rewards = tabular_q_learning_adjust(episodes=30000, alpha=0.01, gamma=0.99,
+                                                 epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99995, reward_shaping=True,
                                                  q_table=None, debug=True)
     print("Training Complete")
     print("Q-table size:", len(q_table))
@@ -127,5 +233,5 @@ if __name__ == "__main__":
 
     # Save the Q-table for testing
     with open("q_table.pkl", "wb") as f:
-        pickle.dump(q_table, f, protocol=4)
+        pickle.dump(q_table, f)
 
