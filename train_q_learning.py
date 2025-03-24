@@ -28,7 +28,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
     Check_station = +5
     Turn_Back = -2
 
-    MAX_STEPS = 200
+    MAX_STEPS = 100
     TOO_LONG = -5
 
     env = SimpleTaxiEnv()
@@ -234,7 +234,7 @@ def tabular_q_learning_adjust(episodes=100000, alpha=0.01, gamma=0.99,
 
 
 if __name__ == "__main__":
-    q_table, rewards = tabular_q_learning_adjust(episodes=50000, alpha=0.01, gamma=0.99,
+    q_table, rewards = tabular_q_learning_adjust(episodes=20000, alpha=0.01, gamma=0.99,
                                                  epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99996, reward_shaping=True,
                                                  q_table=None, debug=True)
     print("Training Complete")
