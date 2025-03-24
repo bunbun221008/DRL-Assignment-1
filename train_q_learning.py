@@ -16,6 +16,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
     - Adjust epsilon decay to ensure sufficient exploration.
     - Ensure the agent learns the full sequence: "pick up key → open door → reach goal".
     """
+    action_n = 6
     DROP_KEY = -0.5
     TAKE_KEY = 0.5
     CLOSE_DOOR = -0.5
@@ -40,8 +41,13 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
         sta_column = [0, 0, 0, 0]
         taxi_row, taxi_col, sta_row[0],sta_column[0],sta_row[1],sta_column[1],sta_row[2],sta_column[2],sta_row[3],sta_column[3],obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
 
-
-        
+        rel_sta_pos = [[0,0], [0,0], [0,0], [0,0]]
+        for i in range(4):
+            rel_sta_pos[i] = [sta_row[i] - taxi_row  , sta_column[i] - taxi_col]
+            if rel_sta_pos[i][0] >0:
+                rel_sta_pos[i][0] = 1 
+            elif rel_sta_pos[i][0] <0:  
+                rel_sta_pos[i][0] = -1        
 
         
 
@@ -59,12 +65,12 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
         while not (done or stop):
             # TODO: Initialize the state in the Q-table if not already present.
             if state not in q_table:
-                q_table[state] = np.zeros(5)
+                q_table[state] = np.zeros(action_n)
 
 
             # TODO: Implement ε-greedy policy for action selection.
             if np.random.rand() < epsilon:
-                action = np.random.choice(5)  # Explore.
+                action = np.random.choice(action_n)  # Explore.
             else:
                 action = np.argmax(q_table[state])  # Exploit.
 
@@ -90,7 +96,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
 
             # TODO: Initialize the next state in the Q-table if not already present.
             if next_state not in q_table:
-                q_table[next_state] = np.zeros(5)
+                q_table[next_state] = np.zeros(action_n)
 
             # TODO: Apply Q-learning update rule (Bellman equation).
             q_table[state][action] += alpha * (reward + gamma * np.max(q_table[next_state]) - q_table[state][action])

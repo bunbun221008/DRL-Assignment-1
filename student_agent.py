@@ -4,17 +4,6 @@ import pickle
 import random
 import gym
 
-def get_q_state(obs):
-
-        # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
-        taxi_row, taxi_col, _,_,_,_,_,_,_,_,obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
-
-
-        
-
-        
-
-        return (obs[10], obs[11], obs[12], obs[13], obs[14], obs[15])
 
 def get_action(obs):
     
