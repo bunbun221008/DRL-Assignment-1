@@ -150,9 +150,7 @@ def get_action(obs):
 
     last_action = action
 
-    print("Passenger_Pos: ", Passenger_Pos)
-    print("Has_Passenger: ", Has_Passenger)
-    print("Has_Picked_Up: ", Has_Picked_Up)
+    
 
     
 
