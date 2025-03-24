@@ -28,11 +28,11 @@ class SimpleTaxiEnv():
         
         # position of four stations in the grid, generate by random
 
-        stations_random_seed = random.sample(range(self.grid_size * self.grid_size), 4)
-        self.stations = [(seed // self.grid_size, seed % self.grid_size) for seed in stations_random_seed]
+        # stations_random_seed = random.sample(range(self.grid_size * self.grid_size), 4)
+        # self.stations = [(seed // self.grid_size, seed % self.grid_size) for seed in stations_random_seed]
 
-        # stations_random_seed = [0,self.grid_size - 1, self.grid_size ** 2 - self.grid_size ,self.grid_size ** 2 - 1]
-        # self.stations = [(0, 0), (0, self.grid_size - 1), (self.grid_size - 1, 0), (self.grid_size - 1, self.grid_size - 1)]
+        stations_random_seed = [0,self.grid_size - 1, self.grid_size ** 2 - self.grid_size ,self.grid_size ** 2 - 1]
+        self.stations = [(0, 0), (0, self.grid_size - 1), (self.grid_size - 1, 0), (self.grid_size - 1, self.grid_size - 1)]
 
         available_positions = list(set(range(self.grid_size * self.grid_size)) - set(stations_random_seed))
         obstacle_seed = random.sample(available_positions, self.OBSTACLE_NUMBER)
@@ -48,8 +48,8 @@ class SimpleTaxiEnv():
         self.current_fuel = self.fuel_limit
         self.passenger_picked_up = False
 
-        stations_random_seed = random.sample(range(self.grid_size * self.grid_size), 4)
-        self.stations = [(seed // self.grid_size, seed % self.grid_size) for seed in stations_random_seed]
+        # stations_random_seed = random.sample(range(self.grid_size * self.grid_size), 4)
+        # self.stations = [(seed // self.grid_size, seed % self.grid_size) for seed in stations_random_seed]
     
         # choose 1 random number from 0 to self.grid_size^2 - 1 that is not in stations_random_seed
         stations_random_seed = [0,self.grid_size - 1, self.grid_size ** 2 - self.grid_size ,self.grid_size ** 2 - 1]
