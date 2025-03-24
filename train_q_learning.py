@@ -35,7 +35,10 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.1, gamma=0.99,
     def get_q_state(obs):
 
         # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
-        taxi_row, taxi_col, _,_,_,_,_,_,_,_,obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
+        #create a list of 4 stations position where positions are unknown
+        sta_row = [0, 0, 0, 0]
+        sta_column = [0, 0, 0, 0]
+        taxi_row, taxi_col, sta_row[0],sta_column[0],sta_row[1],sta_column[1],sta_row[2],sta_column[2],sta_row[3],sta_column[3],obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
 
 
         

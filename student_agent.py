@@ -27,7 +27,18 @@ def get_action(obs):
     # Load the pre-trained Q-table
     with open("q_table.pkl", "rb") as f:
         Q_table = pickle.load(f)
+    def get_q_state(obs):
 
+        # TODO: Represent the state using agent position, direction, key possession, door status, and etc.
+        taxi_row, taxi_col, _,_,_,_,_,_,_,_,obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look = obs
+
+
+        
+
+        
+
+        return (obs[10], obs[11], obs[12], obs[13], obs[14], obs[15])
+    
     state = get_q_state(obs)
     if state not in Q_table:
         Q_table[state] = np.zeros(6)
