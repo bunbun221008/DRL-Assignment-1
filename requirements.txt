@@ -2,5 +2,4 @@ tqdm
 requests
 argparse
 torch
-pickle
-numpy
+
