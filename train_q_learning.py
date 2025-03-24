@@ -6,7 +6,7 @@ from IPython.display import clear_output
 import random
 from simple_custom_taxi_env import SimpleTaxiEnv
 import json
-
+import matplotlib.pyplot as plt
 
 
 
@@ -26,6 +26,10 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
     Pick_Up_Passenger = 10
     Repeat_Pick_Up_Passenger = - 10
     Check_station = +5
+    Turn_Back = -2
+
+    MAX_STEPS = 100
+    TOO_LONG = -5
 
     env = SimpleTaxiEnv()
     env.reset()
@@ -77,7 +81,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
 
         
 
-        return (tuple(rel_sta_pos[0]),tuple(rel_sta_pos[1]),tuple(rel_sta_pos[2]),tuple(rel_sta_pos[3]), obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look, last_action, tuple(rel_passenger_pos), Has_Passenger, tuple(Near_sta), tuple(Checked_Stations), Checked_Destinations)
+        return (tuple(rel_sta_pos[0]),tuple(rel_sta_pos[1]),tuple(rel_sta_pos[2]),tuple(rel_sta_pos[3]), obstacle_north, obstacle_south, obstacle_east, obstacle_west, passenger_look, destination_look, last_action, tuple(rel_passenger_pos), Has_Passenger, tuple(Checked_Stations), Checked_Destinations)
 
 
     for episode in range(episodes):
@@ -139,13 +143,13 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
             
             Near_Stations = [0,0,0,0]
             
-            if np.abs(taxi_row - sta_row[0]) + np.abs(taxi_col - sta_column[0]) <= 1:
+            if np.abs(taxi_row - sta_row[0]) + np.abs(taxi_col - sta_column[0]) <= 0:
                 Near_Stations[0] = 1
-            if np.abs(taxi_row - sta_row[1]) + np.abs(taxi_col - sta_column[1]) <= 1:
+            if np.abs(taxi_row - sta_row[1]) + np.abs(taxi_col - sta_column[1]) <= 0:
                 Near_Stations[1] = 1 
-            if np.abs(taxi_row - sta_row[2]) + np.abs(taxi_col - sta_column[2]) <= 1:
+            if np.abs(taxi_row - sta_row[2]) + np.abs(taxi_col - sta_column[2]) <= 0:
                 Near_Stations[2] = 1
-            if np.abs(taxi_row - sta_row[3]) + np.abs(taxi_col - sta_column[3]) <= 1:
+            if np.abs(taxi_row - sta_row[3]) + np.abs(taxi_col - sta_column[3]) <= 0:
                 Near_Stations[3] = 1
             
             if Near_Stations[0] == 1:
@@ -168,12 +172,14 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
             next_state = get_q_state(obs, action, Passenger_Pos, Has_Passenger, Checked_Stations, Checked_Destinations)
             episode_step += 1
 
-            if episode_step >= 50:
-                stop = True
+            
 
             # ✅ TODO: Implement reward shaping.
 
             shaped_reward = 0
+            if episode_step >= MAX_STEPS:
+                stop = True
+                shaped_reward += TOO_LONG
 
             if state[12] == 0 and next_state[12] == 1:
                 shaped_reward += Pick_Up_Passenger
@@ -183,15 +189,18 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
             if next_state[8] == 0 and state[8] == 1:
                 shaped_reward -= Near_Passenger
 
-            if Checked_Stations[0] == 1 and state[14][0] == 0 :
+            if Checked_Stations[0] == 1 and state[13][0] == 0 :
                 shaped_reward += Check_station
-            if Checked_Stations[1] == 1 and state[14][1] == 0 :
+            if Checked_Stations[1] == 1 and state[13][1] == 0 :
                 shaped_reward += Check_station
-            if Checked_Stations[2] == 1 and state[14][2] == 0 :
+            if Checked_Stations[2] == 1 and state[13][2] == 0 :
                 shaped_reward += Check_station
-            if Checked_Stations[3] == 1 and state[14][3] == 0 :
+            if Checked_Stations[3] == 1 and state[13][3] == 0 :
                 shaped_reward += Check_station
             
+
+            if (next_state[10],state[10]) == (0,1) or (next_state[10],state[10]) == (1,0) or (next_state[10],state[10]) == (2,3) or (next_state[10],state[10]) == (3,2):
+                shaped_reward += Turn_Back
 
 
             # Update total reward.
@@ -223,7 +232,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
 
 
 if __name__ == "__main__":
-    q_table, rewards = tabular_q_learning_adjust(episodes=30000, alpha=0.01, gamma=0.99,
+    q_table, rewards = tabular_q_learning_adjust(episodes=50000, alpha=0.01, gamma=0.99,
                                                  epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99995, reward_shaping=True,
                                                  q_table=None, debug=True)
     print("Training Complete")
@@ -234,4 +243,10 @@ if __name__ == "__main__":
     # Save the Q-table for testing
     with open("q_table.pkl", "wb") as f:
         pickle.dump(q_table, f)
+
+    plt.plot(rewards)
+    plt.xlabel("Episodes")
+    plt.ylabel("Total Reward")
+    plt.title("Q-learning Training Progress")
+    plt.show()
 
