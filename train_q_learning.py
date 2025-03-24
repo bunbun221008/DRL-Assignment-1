@@ -7,7 +7,7 @@ import random
 from simple_custom_taxi_env import SimpleTaxiEnv
 import json
 import matplotlib.pyplot as plt
-from joblib import dump, load
+
 
 
 def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
@@ -232,7 +232,7 @@ def tabular_q_learning_adjust(episodes=10000, alpha=0.01, gamma=0.99,
 
 
 if __name__ == "__main__":
-    q_table, rewards = tabular_q_learning_adjust(episodes=20000, alpha=0.01, gamma=0.99,
+    q_table, rewards = tabular_q_learning_adjust(episodes=50000, alpha=0.01, gamma=0.99,
                                                  epsilon_start=1.0, epsilon_end=0.1, decay_rate=0.99995, reward_shaping=True,
                                                  q_table=None, debug=True)
     print("Training Complete")
@@ -241,7 +241,8 @@ if __name__ == "__main__":
 
 
     # Save the Q-table for testing
-    dump(q_table, "q_table.joblib")
+    with open("q_table.pkl", "wb") as f:
+        pickle.dump(q_table, f)
 
     plt.plot(rewards)
     plt.xlabel("Episodes")
